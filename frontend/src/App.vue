@@ -63,6 +63,12 @@ function goToNextPage() {
   currentPage.value++
 }
 
+function goToPage(page) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+  }
+}
+
 </script>
 
 <template>
@@ -138,6 +144,7 @@ function goToNextPage() {
           :total-pages="totalPages"
           @previous="goToPreviousPage"
           @next="goToNextPage"
+          @go-to-page="goToPage"
         />
 
       </section>
