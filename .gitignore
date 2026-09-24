@@ -1,0 +1,25 @@
+﻿# Visual Studio
+.vs/
+*.csproj.user
+
+# Build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+
+# Logs
+*.log
+
+# Node.js
+node_modules/
+
+# Vue build output
+dist/
+
+# Environment files
+.env
+.env.*
+!.env.example
