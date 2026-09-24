@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [vue()],
 
   server: {
+    allowedHosts: ['visiting-morally-composure.ngrok-free.dev'],
     proxy: {
       '/api': {
         target: 'https://localhost:7233',

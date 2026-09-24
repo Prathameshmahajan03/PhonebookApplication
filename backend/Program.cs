@@ -32,17 +32,10 @@ namespace PhonebookApplication
 
             app.UseHttpsRedirection();
 
-            // Serve Vue application from wwwroot
-            app.UseDefaultFiles();
-            app.UseStaticFiles();
-
             app.UseAuthorization();
 
             // API endpoints
             app.MapControllers();
-
-            // Vue SPA fallback
-            app.MapFallbackToFile("index.html");
 
             app.Run();
         }

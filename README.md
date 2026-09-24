@@ -1,165 +1,150 @@
 ﻿# Phonebook Application
 
-A classic CRUD Phonebook Application built using ASP.NET Core Web API, SQL Server Express, ADO.NET, Stored Procedures, and Vue.js.
+A working CRUD phonebook built with an ASP.NET Core Web API, SQL Server Express, ADO.NET, stored procedures, and a Vue 3 SPA.
 
-## Objective
+## Architecture
 
-The objective of this application is to provide a simple phonebook system where users can:
+This repository is organized as a monorepo:
 
-- Add contacts
-- View contacts
-- Search contacts
-- Update contacts
-- Delete contacts
-- Navigate contacts using server-side pagination
+- `backend/` is a pure .NET 8 ASP.NET Core REST API. It does not serve Vue files.
+- `frontend/` is the Vue 3/Vite SPA. Vite builds it to `frontend/dist`.
+- The database is initialized separately from `backend/Database/PhonebookDB.sql`.
 
-The application follows a monolithic architecture with ASP.NET Core handling the backend API and Vue.js providing the frontend user interface.
+The frontend and API use the existing `/api/contacts` contract. In development, Vite proxies `/api` to the HTTPS backend. In production, host `frontend/dist` separately and route `/api/*` to the backend through a same-origin reverse proxy, or configure an explicit cross-origin API policy separately.
 
-## Technology Stack
+## Project structure
+
+```text
+PhonebookApplication/
+├── PhonebookApplication.sln
+├── README.md
+├── AGENTS.md
+├── backend/
+│   ├── PhonebookApplication.csproj
+│   ├── Program.cs
+│   ├── appsettings.json
+│   ├── appsettings.Development.json
+│   ├── PhonebookApplication.http
+│   ├── Controllers/
+│   ├── Models/
+│   ├── Repositories/
+│   ├── Exceptions/
+│   ├── Database/
+│   │   └── PhonebookDB.sql
+│   └── Properties/
+│       └── launchSettings.json
+└── frontend/
+    ├── package.json
+    ├── package-lock.json
+    ├── vite.config.js
+    ├── index.html
+    ├── src/
+    ├── public/
+    ├── .vscode/
+    └── README.md
+```
+
+`backend/bin`, `backend/obj`, `frontend/node_modules`, and `frontend/dist` are generated and ignored.
+
+## Technology stack
 
 ### Backend
 
-- .NET 8
-- ASP.NET Core Web API
-- C#
-- ADO.NET
-- Microsoft.Data.SqlClient
-- T-SQL Stored Procedures
-
-### Database
-
+- .NET 8 / ASP.NET Core Web API
+- C# controller-based REST API
+- ADO.NET with `Microsoft.Data.SqlClient`
 - SQL Server Express
+- T-SQL stored procedures
+- Swashbuckle/OpenAPI
 
 ### Frontend
 
 - Vue 3
 - Vite
-- JavaScript
-- HTML
-- CSS
+- JavaScript and Vue Single-File Components
+- Global CSS
 
-### Development Tools
+## Database setup
 
-- Visual Studio 2022
-- SQL Server Management Studio (SSMS)
-- Node.js / npm
+1. Start SQL Server Express.
+2. Open SSMS and run `backend/Database/PhonebookDB.sql` against the intended SQL Server instance.
+3. Confirm the `PhonebookDB` database, `Contacts` table, and five stored procedures exist.
 
-## Project Structure
+The script creates the database only when it is absent; its table and procedure creation statements are not idempotent. Do not run the complete script against an already initialized database as a routine update. The application does not create or migrate the database at startup.
+
+The default local connection string is in `backend/appsettings.json` and targets SQL Server Express with Windows integrated authentication.
+
+## Development
+
+Install and build each application independently.
+
+Backend:
 
 ```text
-PhonebookApplication
-│
-├── Controllers
-│   └── ContactsController.cs
-│
-├── Models
-│   ├── Contact.cs
-│   └── PagedResult.cs
-│
-├── Repositories
-│   ├── IContactRepository.cs
-│   └── ContactRepository.cs
-│
-├── Exceptions
-│   └── DuplicatePhoneException.cs
-│
-├── Database
-│   └── PhonebookDB.sql
-│
-├── wwwroot
-│   ├── assets
-│   ├── favicon.svg
-│   ├── icons.svg
-│   └── index.html
-│
-├── client
-│   └── Vue.js frontend source
-│
-├── Program.cs
-├── appsettings.json
-└── README.md
+dotnet restore PhonebookApplication.sln
+dotnet build PhonebookApplication.sln
 ```
 
-## API Endpoints
+Start the backend with the HTTPS profile used by the Vite proxy:
+
+```text
+dotnet run --project backend/PhonebookApplication.csproj --launch-profile https
+```
+
+The API is available at `https://localhost:7233`; Swagger is available at `/swagger` in the Development environment.
+
+Frontend, in a second terminal:
+
+```text
+npm --prefix frontend ci
+npm --prefix frontend run dev
+```
+
+Vite serves the SPA and proxies `/api` requests to `https://localhost:7233`. The proxy is defined in `frontend/vite.config.js`.
+
+## Frontend build
+
+```text
+npm --prefix frontend run build
+```
+
+The deployable frontend artifact is `frontend/dist`. ASP.NET Core does not copy or serve this directory.
+
+## Backend publish
+
+```text
+dotnet publish backend/PhonebookApplication.csproj -c Release -o <publish-output>
+```
+
+The backend publish output contains the REST API and its configuration, not the Vue application.
+
+## API endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/contacts?pageNumber=1&pageSize=10` | Get paginated contacts |
-| GET | `/api/contacts/{id}` | Get contact by ID |
-| POST | `/api/contacts` | Add a new contact |
-| PUT | `/api/contacts/{id}` | Update an existing contact |
-| DELETE | `/api/contacts/{id}` | Delete a contact |
+| GET | `/api/contacts?pageNumber=1&pageSize=10&searchTerm=` | Paginated contacts and server-side search |
+| GET | `/api/contacts/{id}` | Get one contact |
+| POST | `/api/contacts` | Create a contact; returns `201` |
+| PUT | `/api/contacts/{id}` | Update a contact; returns `200` |
+| DELETE | `/api/contacts/{id}` | Delete a contact; returns `204` |
 
-### Search
-
-Search is supported through the `searchTerm` query parameter.
-
-Example:
-
-```text
-GET /api/contacts?pageNumber=1&pageSize=10&searchTerm=Rahul
-```
-## Database Setup
-
-1. Open SQL Server Management Studio (SSMS).
-2. Connect to SQL Server Express.
-3. Open the following file from the project:
-
-```text
-Database/PhonebookDB.sql
-```
-
-4. Execute the complete SQL script.
-
-The script creates:
-
-- `PhonebookDB` database
-- `Contacts` table
-- Required stored procedures for CRUD, search, and pagination
-
-### Connection String
-
-The application uses SQL Server Express with Windows Authentication:
-
-```text
-Server=.\SQLEXPRESS;Database=PhonebookDB;Trusted_Connection=True;TrustServerCertificate=True;
-```
-Make sure SQL Server Express is running before starting the application.
-
-## How to Run the Application
-
-### Backend and Frontend
-
-1. Make sure SQL Server Express is running.
-2. Make sure the `PhonebookDB` database has been created using the SQL script.
-3. Open the project in Visual Studio 2022.
-4. Build the project:
-
-```text
-dotnet build
-```
-
-5. Run the application:
-
-```text
-dotnet run
-```
-
-6. Open the application in a browser using the URL shown in the terminal.
-
-The ASP.NET Core application serves both the Web API and the Vue.js frontend.
+Contacts are validated with the existing rules: required name, exactly 10-digit phone number, optional email, and maximum 255-character name/email values. The existing duplicate-phone response and stored procedure behavior are unchanged.
 
 ## Features
 
-- Add new contacts
+- Add contacts
 - View contacts in a paginated list
-- Search contacts by name, phone number, or email
+- Search by name, phone number, or email
 - Edit existing contacts
 - Delete contacts
-- Client-side form validation
-- Server-side validation using ASP.NET Core DataAnnotations
-- Database-level pagination using SQL Server `OFFSET` and `FETCH`
-- Stored procedures for database operations
-- Duplicate phone number validation
-- RESTful API endpoints returning JSON
-- Vue.js frontend served by ASP.NET Core in production
+- Client-side and ASP.NET Core DataAnnotations validation
+- Database-level pagination using SQL Server `OFFSET/FETCH`
+- Stored procedures for CRUD, search, and pagination
+- Duplicate phone validation
+- RESTful JSON API
+
+## Testing and deployment notes
+
+This repository has no automated backend or frontend test suite. Use the build commands above and manually verify the API/UI workflows against a disposable or backed-up database before running mutating requests.
+
+No Docker, CI/CD, reverse-proxy, or production hosting configuration is included. The production host must serve `frontend/dist` and route `/api/*` to the backend if the frontend is to use its existing relative URLs.
