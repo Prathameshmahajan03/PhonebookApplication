@@ -1,13 +1,30 @@
 <script setup>
-import { ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
 
 const searchTerm = ref('')
 
 const emit = defineEmits(['search'])
 
+let searchTimer
+
+function scheduleSearch() {
+  clearTimeout(searchTimer)
+
+  searchTimer = setTimeout(() => {
+    searchTimer = undefined
+    emit('search', searchTerm.value)
+  }, 300)
+}
+
 function searchContacts() {
+  clearTimeout(searchTimer)
+  searchTimer = undefined
   emit('search', searchTerm.value)
 }
+
+onBeforeUnmount(() => {
+  clearTimeout(searchTimer)
+})
 </script>
 
 <template>
@@ -22,6 +39,7 @@ function searchContacts() {
         type="text"
         v-model="searchTerm"
         placeholder="Search contacts..."
+        @input="scheduleSearch"
       />
 
     </div>
