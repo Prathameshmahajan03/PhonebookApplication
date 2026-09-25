@@ -68,11 +68,20 @@ PhonebookApplication/
 
 1. Start SQL Server Express.
 2. Open SSMS and run `backend/Database/PhonebookDB.sql` against the intended SQL Server instance.
-3. Confirm the `PhonebookDB` database, `Contacts` table, and five stored procedures exist.
+3. Run `backend/Database/Authentication.sql` against the same database.
+4. Confirm the `PhonebookDB` database, `Contacts` and `Users` tables, and all required stored procedures exist.
 
 The script creates the database only when it is absent; its table and procedure creation statements are not idempotent. Do not run the complete script against an already initialized database as a routine update. The application does not create or migrate the database at startup.
 
 The default local connection string is in `backend/appsettings.json` and targets SQL Server Express with Windows integrated authentication.
+
+### Initial user provisioning
+
+The API provisions the configured initial user once at application startup. The username is configured in `backend/appsettings.json`. Configure the initial password through User Secrets or an environment variable; do not add the password to source control or SQL scripts:
+
+```text
+dotnet user-secrets set "InitialUser:Password" "<initial-user-password>"
+```
 
 ## Development
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PhonebookApplication.Exceptions;
 using PhonebookApplication.Models;
 using PhonebookApplication.Repositories;
@@ -6,6 +7,7 @@ using PhonebookApplication.Repositories;
 namespace PhonebookApplication.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class ContactsController : ControllerBase
     {

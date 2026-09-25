@@ -2,6 +2,8 @@
 
 import { ref, watch } from 'vue'
 
+import { createContact, updateContact } from '../api/contactsApi'
+
 const props = defineProps({
   selectedContact: {
     type: Object,
@@ -113,19 +115,9 @@ async function handleSubmit() {
 
   try {
 
-    const method = props.selectedContact ? 'PUT' : 'POST'
-
-    const url = props.selectedContact
-      ? `/api/contacts/${props.selectedContact.id}`
-      : '/api/contacts'
-
-    const response = await fetch(url, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(form.value)
-    })
+    const response = props.selectedContact
+      ? await updateContact(props.selectedContact.id, form.value)
+      : await createContact(form.value)
 
     if (!response.ok) {
       const errorText = await response.text()

@@ -2,6 +2,8 @@
 
 import { ref, onMounted, watch } from 'vue'
 
+import { getContacts } from '../api/contactsApi'
+
 const props = defineProps({
   searchTerm: {
     type: String,
@@ -33,9 +35,11 @@ async function loadContacts() {
 
   try {
 
-    const response = await fetch(
-      `/api/contacts?pageNumber=${props.currentPage}&pageSize=${props.pageSize}&searchTerm=${encodeURIComponent(props.searchTerm)}`
-    )
+    const response = await getContacts({
+      pageNumber: props.currentPage,
+      pageSize: props.pageSize,
+      searchTerm: props.searchTerm
+    })
 
     if (!response.ok) {
       throw new Error('Failed to load contacts.')

@@ -1,11 +1,24 @@
 <script setup>
 
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
+import {
+  AUTH_UNAUTHORIZED_EVENT,
+  clearAuthStorage,
+  deleteContact
+} from './api/contactsApi'
 import SearchBox from './components/SearchBox.vue'
 import ContactForm from './components/ContactForm.vue'
 import ContactList from './components/ContactList.vue'
+import LoginPage from './components/LoginPage.vue'
 import Pagination from './components/Pagination.vue'
+
+const JWT_TOKEN_STORAGE_KEY = 'jwtToken'
+const USERNAME_STORAGE_KEY = 'username'
+
+const authToken = ref(localStorage.getItem(JWT_TOKEN_STORAGE_KEY) || '')
+const username = ref(localStorage.getItem(USERNAME_STORAGE_KEY) || '')
+const isAuthenticated = computed(() => Boolean(authToken.value))
 
 const searchTerm = ref('')
 const currentPage = ref(1)
@@ -13,6 +26,31 @@ const pageSize = ref(10)
 const totalPages = ref(1)
 const selectedContact = ref(null)
 const refreshKey = ref(0)
+
+function handleLogin(auth) {
+  localStorage.setItem(JWT_TOKEN_STORAGE_KEY, auth.token)
+  localStorage.setItem(USERNAME_STORAGE_KEY, auth.username)
+
+  authToken.value = auth.token
+  username.value = auth.username
+}
+
+function resetAuthentication() {
+  clearAuthStorage()
+
+  authToken.value = ''
+  username.value = ''
+}
+
+function handleLogout() {
+  resetAuthentication()
+}
+
+function handleUnauthorized() {
+  resetAuthentication()
+}
+
+window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized)
 
 function refreshContacts() {
   refreshKey.value++
@@ -40,9 +78,7 @@ async function handleDelete(id) {
     return
   }
 
-  const response = await fetch(`/api/contacts/${id}`, {
-    method: 'DELETE'
-  })
+  const response = await deleteContact(id)
 
   if (!response.ok) {
     throw new Error('Failed to delete contact.')
@@ -73,7 +109,15 @@ function goToPage(page) {
 
 <template>
 
-  <div class="app">
+  <LoginPage
+    v-if="!isAuthenticated"
+    @login="handleLogin"
+  />
+
+  <div
+    v-else
+    class="app"
+  >
 
     <!-- Header -->
     <header class="app-header">
@@ -93,8 +137,27 @@ function goToPage(page) {
 
         </div>
 
-        <div class="header-badge">
-          Organize <span>•</span> Manage <span>•</span> Stay Connected
+        <div class="header-actions">
+
+          <span
+            v-if="username"
+            class="header-user"
+          >
+            {{ username }}
+          </span>
+
+          <div class="header-badge">
+            Organize <span>•</span> Manage <span>•</span> Stay Connected
+          </div>
+
+          <button
+            class="logout-btn"
+            type="button"
+            @click="handleLogout"
+          >
+            Logout
+          </button>
+
         </div>
 
       </div>
@@ -172,3 +235,60 @@ function goToPage(page) {
   </div>
 
 </template>
+
+<style scoped>
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-user {
+  max-width: 180px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.logout-btn {
+  padding: 10px 16px;
+
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 30px;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+@media (max-width: 1000px) {
+
+  .header-actions {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+}
+
+</style>
