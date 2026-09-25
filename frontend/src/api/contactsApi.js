@@ -55,6 +55,15 @@ export function getContacts({ pageNumber, pageSize, searchTerm }) {
   })
 }
 
+export function exportContacts(format) {
+  const exportFormat = format === 'json' ? 'json' : 'csv'
+
+  return sendRequest(`/api/contacts/export/${exportFormat}`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  })
+}
+
 export function getContactById(id) {
   return sendRequest(`/api/contacts/${id}`, {
     method: 'GET',

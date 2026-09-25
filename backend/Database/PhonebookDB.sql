@@ -171,3 +171,23 @@ BEGIN
 END
 GO
 
+/* =========================================
+   GET ALL CONTACTS FOR EXPORT
+   ========================================= */
+
+CREATE PROCEDURE sp_GetContactsForExport
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        Id,
+        Name,
+        PhoneNumber,
+        Email,
+        Address
+    FROM Contacts
+    ORDER BY Name ASC;
+END
+GO
+

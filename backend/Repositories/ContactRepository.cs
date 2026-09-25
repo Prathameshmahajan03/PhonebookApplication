@@ -13,6 +13,41 @@ namespace PhonebookApplication.Repositories
             _connectionString = configuration.GetConnectionString("DefaultConnection")!;
         }
 
+        public async Task<List<ContactExportRecord>> GetContactsForExportAsync()
+        {
+            using SqlConnection connection = new SqlConnection(_connectionString);
+
+            using SqlCommand command = new SqlCommand(
+                "sp_GetContactsForExport",
+                connection);
+
+            command.CommandType = System.Data.CommandType.StoredProcedure;
+
+            await connection.OpenAsync();
+
+            using SqlDataReader reader = await command.ExecuteReaderAsync();
+
+            var contacts = new List<ContactExportRecord>();
+
+            while (await reader.ReadAsync())
+            {
+                contacts.Add(new ContactExportRecord
+                {
+                    Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                    Name = reader.GetString(reader.GetOrdinal("Name")),
+                    PhoneNumber = reader.GetString(reader.GetOrdinal("PhoneNumber")),
+                    Email = reader.IsDBNull(reader.GetOrdinal("Email"))
+                        ? null
+                        : reader.GetString(reader.GetOrdinal("Email")),
+                    Address = reader.IsDBNull(reader.GetOrdinal("Address"))
+                        ? null
+                        : reader.GetString(reader.GetOrdinal("Address"))
+                });
+            }
+
+            return contacts;
+        }
+
         public async Task<Contact?> GetContactByIdAsync(int id)
         {
             using SqlConnection connection = new SqlConnection(_connectionString);

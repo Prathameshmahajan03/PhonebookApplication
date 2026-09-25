@@ -9,6 +9,8 @@ namespace PhonebookApplication.Repositories
             int pageSize,
             string? searchTerm);
 
+        Task<List<ContactExportRecord>> GetContactsForExportAsync();
+
         Task<Contact?> GetContactByIdAsync(int id);
 
         Task<int> InsertContactAsync(Contact contact);

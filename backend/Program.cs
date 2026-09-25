@@ -20,6 +20,7 @@ namespace PhonebookApplication
             builder.Services.AddScoped<IPasswordService, PasswordService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IInitialUserProvisioningService, InitialUserProvisioningService>();
+            builder.Services.AddScoped<IContactExportService, ContactExportService>();
 
             string jwtKey = builder.Configuration["Jwt:Key"]
                 ?? throw new InvalidOperationException(

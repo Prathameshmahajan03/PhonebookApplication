@@ -10,6 +10,7 @@ import {
 import SearchBox from './components/SearchBox.vue'
 import ContactForm from './components/ContactForm.vue'
 import ContactList from './components/ContactList.vue'
+import ContactExport from './components/ContactExport.vue'
 import LoginPage from './components/LoginPage.vue'
 import Pagination from './components/Pagination.vue'
 
@@ -183,6 +184,8 @@ function goToPage(page) {
       <section class="contacts-card">
 
         <SearchBox @search="handleSearch" />
+
+        <ContactExport />
 
         <p
           v-if="searchTerm"

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PhonebookApplication.Exceptions;
 using PhonebookApplication.Models;
 using PhonebookApplication.Repositories;
+using PhonebookApplication.Services;
 
 namespace PhonebookApplication.Controllers
 {
@@ -12,10 +13,14 @@ namespace PhonebookApplication.Controllers
     public class ContactsController : ControllerBase
     {
         private readonly IContactRepository _repository;
+        private readonly IContactExportService _exportService;
 
-        public ContactsController(IContactRepository repository)
+        public ContactsController(
+            IContactRepository repository,
+            IContactExportService exportService)
         {
             _repository = repository;
+            _exportService = exportService;
         }
 
         [HttpGet]
@@ -42,6 +47,28 @@ namespace PhonebookApplication.Controllers
             );
 
             return Ok(result);
+        }
+
+        [HttpGet("export/csv")]
+        public async Task<IActionResult> ExportContactsCsv()
+        {
+            List<ContactExportRecord> contacts =
+                await _repository.GetContactsForExportAsync();
+
+            byte[] file = _exportService.CreateCsv(contacts);
+
+            return File(file, "text/csv; charset=utf-8", "contacts.csv");
+        }
+
+        [HttpGet("export/json")]
+        public async Task<IActionResult> ExportContactsJson()
+        {
+            List<ContactExportRecord> contacts =
+                await _repository.GetContactsForExportAsync();
+
+            byte[] file = _exportService.CreateJson(contacts);
+
+            return File(file, "application/json; charset=utf-8", "contacts.json");
         }
 
         [HttpPost]
